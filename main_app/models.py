@@ -19,3 +19,15 @@ class Ticket(models.Model):
 
     def __str__(self):
         return f"{self.event.name} - {self.user.username}"
+
+# create third model
+class Transfer(models.Model):
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    seller = models.ForeignKey(User, related_name='sales', on_delete=models.CASCADE)
+    buyer = models.ForeignKey(User, related_name='purchases', on_delete=models.CASCADE, null=True, blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    is_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Transfer of {self.ticket} by {self.seller}"
