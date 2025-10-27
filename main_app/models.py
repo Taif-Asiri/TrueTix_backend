@@ -13,7 +13,7 @@ class Event(models.Model):
 #Create 2nd model 
 class Ticket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  #Link it with user
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="tickets")
     qr_code = models.CharField(max_length=200, unique=True)
     is_active = models.BooleanField(default=True)
 
