@@ -1,26 +1,30 @@
-from rest_framework import viewsets, permissions
-from rest_framework.response import Response
+from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Event, Ticket, Transfer
-from .serializers import EventSerializer, TicketSerializer, TransferSerializer
 
-class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    permission_classes = [permissions.AllowAny]
-    
-class TicketSerializer(viewsets.ModelViewSet):
-    queryset = Ticket.objects.all()
-    serializer_class = TicketSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)  
-        
-class TransferViewSet(viewsets.ModelViewSet):
-    queryset = Transfer.objects.all()
-    serializer_class = TransferSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
 
-    def perform_create(self, serializer):
-        serializer.save(seller=self.request.user)    
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+class TicketSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)  
+    event = EventSerializer(read_only=True)
+
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+
+class TransferSerializer(serializers.ModelSerializer):
+    ticket = TicketSerializer(read_only=True)
+    seller = UserSerializer(read_only=True)
+    buyer = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Transfer
+        fields = '__all__'
