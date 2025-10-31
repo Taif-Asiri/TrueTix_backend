@@ -1,7 +1,8 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, generics
 from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny
 from .models import Event, Ticket, Transfer
-from .serializers import EventSerializer, TicketSerializer, TransferSerializer
+from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -25,4 +26,7 @@ class TransferViewSet(viewsets.ModelViewSet):
         serializer.save(seller=self.request.user)
 
 
-
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
