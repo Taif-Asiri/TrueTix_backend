@@ -8,5 +8,5 @@ router.register(r'tickets', TicketViewSet)
 router.register(r'transfers', TransferViewSet)
 
 urlpatterns = [
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]

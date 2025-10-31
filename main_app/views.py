@@ -1,5 +1,4 @@
 from rest_framework import viewsets, permissions
-from rest_framework.response import Response
 from django.contrib.auth.models import User
 from .models import Event, Ticket, Transfer
 from .serializers import EventSerializer, TicketSerializer, TransferSerializer
