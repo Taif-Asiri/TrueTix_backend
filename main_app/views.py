@@ -37,9 +37,10 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
     
-    def perform_create(self, serializer):
-        user = serializer.save()   
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
         
+        user = User.objects.get(username=request.data['username'])
         otp = random.randint(100000, 999999) 
         profile = Profile.objects.get(user=user)
         profile.verification_code = otp
@@ -57,7 +58,7 @@ class RegisterView(generics.CreateAPIView):
             fail_silently=False,
         )
 
-        return otp
+        return response
         
 
 

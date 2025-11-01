@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import Event, Ticket, Transfer
 import random
 from django.core.mail import send_mail
+from rest_framework.validators import UniqueValidator
 
 
 
@@ -34,15 +35,18 @@ class TransferSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all(), message="This email is already registered.")]
+    )
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)  
+      
     class Meta:
         model = User
         fields = ['id', 'username','first_name', 'last_name', 'email', 'password', ]
-        extra_kwargs = {'password': {'write_only': True}}
-        
-        def validate_email(self, value):
-            if User.objects.filter(email=value).exists():
-                raise serializers.ValidationError("Email is already in use.")
-            return value
+ 
 
     def create(self, validated_data):
         user = User.objects.create_user(
