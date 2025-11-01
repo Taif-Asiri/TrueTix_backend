@@ -1,10 +1,13 @@
 from rest_framework import viewsets, permissions, generics, status
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
-from .models import Event, Ticket, Transfer
+from .models import Event, Ticket, Transfer, Profile
 from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
+import random
+from django.core.mail import send_mail
+
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -34,7 +37,25 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
     
+    def perform_create(self, serializer):
+        user = serializer.save()   
+        
+        profile, created = Profile.objects.get_or_create(user=user)
+        verification_code = str(random.randint(100000, 999999))
+        profile.verification_code = verification_code
+        profile.save()
+
     
+        send_mail(
+            'Your TrueTix Verification Code',
+            f'Your verification code is: {verification_code}',
+            'TrueTix@outlook.com',
+            [user.email],
+            fail_silently=False,
+        )
+        
+
+
 class VerifyEmailView(APIView):
     def post(self, request):
         username = request.data.get("username")

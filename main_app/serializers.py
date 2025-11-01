@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Event, Ticket, Transfer
-from django.core.mail import send_mail
 import random
+from django.core.mail import send_mail
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,7 +36,7 @@ class TransferSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'verification_code']
+        fields = ['id', 'username', 'email', 'password']
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -45,19 +46,21 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             is_active=False
         )
+        # from .models import Profile
+        # profile, created = Profile.objects.get_or_create(user=user)
+        # code = str(random.randint(100000, 999999))
+        # profile, created = Profile.objects.get_or_create(user=user)
+        # profile.verification_code = code
+        # profile.save()
+
+
+        # send_mail(
+        #     'Your TrueTix Verification Code',
+        #     f'Your verification code is: {code}',
+        #     'noreply@truetix.com',
+        #     [user.email],
+        #     fail_silently=False,
+        # )
         
-        code = str(random.randint(100000, 999999))
-
-        user.profile.verification_code = code
-        user.profile.save()
-
-
-        send_mail(
-            'Your TrueTix Verification Code',
-            f'Your verification code is: {code}',
-            'noreply@truetix.com',
-            [user.email],
-            fail_silently=False,
-        )
-
+        
         return user

@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 # create first model
 class Event(models.Model):
     name = models.CharField(max_length=100)
@@ -35,8 +37,9 @@ class Transfer(models.Model):
     
 #create 4th model 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     verification_code = models.CharField(max_length=6, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
+
