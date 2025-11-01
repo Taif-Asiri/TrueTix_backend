@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import EventViewSet, TicketViewSet, TransferViewSet
+from .views import EventViewSet, TicketViewSet, TransferViewSet, RegisterView
 
 router = DefaultRouter()
 router.register(r'events', EventViewSet)
@@ -9,4 +9,6 @@ router.register(r'transfers', TransferViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('register/', RegisterView.as_view(), name='register'),
+
 ]
