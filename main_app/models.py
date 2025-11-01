@@ -31,3 +31,12 @@ class Transfer(models.Model):
 
     def __str__(self):
         return f"Transfer of {self.ticket} by {self.seller}"
+    
+    
+#create 4th model 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=6, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
