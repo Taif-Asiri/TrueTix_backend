@@ -40,19 +40,24 @@ class RegisterView(generics.CreateAPIView):
     def perform_create(self, serializer):
         user = serializer.save()   
         
-        profile, created = Profile.objects.get_or_create(user=user)
-        verification_code = str(random.randint(100000, 999999))
-        profile.verification_code = verification_code
+        otp = random.randint(100000, 999999) 
+        profile = Profile.objects.get(user=user)
+        profile.verification_code = otp
         profile.save()
+        
+        subject = "Your TrueTix Verification Code"
+        message = f"Hello!\n\nYour verification code is: {otp}\n\nThank you for using TrueTix."
+        from_email = "truetix@outlook.com" 
 
-    
         send_mail(
-            'Your TrueTix Verification Code',
-            f'Your verification code is: {verification_code}',
-            'TrueTix@outlook.com',
+            subject,
+            message,
+            from_email,
             [user.email],
             fail_silently=False,
         )
+
+        return otp
         
 
 

@@ -36,31 +36,24 @@ class TransferSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'username','first_name', 'last_name', 'email', 'password', ]
         extra_kwargs = {'password': {'write_only': True}}
+        
+        def validate_email(self, value):
+            if User.objects.filter(email=value).exists():
+                raise serializers.ValidationError("Email is already in use.")
+            return value
 
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
             email=validated_data['email'],
             password=validated_data['password'],
             is_active=False
         )
-        # from .models import Profile
-        # profile, created = Profile.objects.get_or_create(user=user)
-        # code = str(random.randint(100000, 999999))
-        # profile, created = Profile.objects.get_or_create(user=user)
-        # profile.verification_code = code
-        # profile.save()
 
-
-        # send_mail(
-        #     'Your TrueTix Verification Code',
-        #     f'Your verification code is: {code}',
-        #     'noreply@truetix.com',
-        #     [user.email],
-        #     fail_silently=False,
-        # )
         
         
         return user
