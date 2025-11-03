@@ -11,5 +11,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
     path('verify/', VerifyEmailView.as_view(), name='verify'),
+ 
 
 ]
