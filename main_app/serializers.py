@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Event, Ticket, Transfer, Profile
+from .models import Event, Ticket, Transfer, Profile, Cart
 import random
 from django.core.mail import send_mail
 from rest_framework.validators import UniqueValidator
@@ -16,7 +16,14 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ["verification_code"]        
+        fields = ["verification_code"]   
+        
+        
+class CartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = '__all__'
+        read_only_fields = ['user']             
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,7 +71,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             is_active=False
         )
-
-        
+    
         
         return user

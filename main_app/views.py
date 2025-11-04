@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, generics, status
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import Event, Ticket, Transfer, Profile
-from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, ProfileSerializer
+from .models import Event, Ticket, Transfer, Profile, Cart
+from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, ProfileSerializer, CartSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import random
@@ -99,3 +99,13 @@ class UserProfileView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CartViewSet(viewsets.ModelViewSet):
+    serializer_class = CartSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
