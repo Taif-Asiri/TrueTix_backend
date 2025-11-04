@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Event, Ticket, Transfer
+from .models import Event, Ticket, Transfer, Profile
 import random
 from django.core.mail import send_mail
 from rest_framework.validators import UniqueValidator
@@ -8,9 +8,15 @@ from rest_framework.validators import UniqueValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'email', "is_active"]
+        read_only_fields = ['username']
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ["verification_code"]        
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,6 +52,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username','first_name', 'last_name', 'email', 'password', ]
+        
  
 
     def create(self, validated_data):

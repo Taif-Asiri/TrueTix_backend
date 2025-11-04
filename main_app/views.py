@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, generics, status
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Event, Ticket, Transfer, Profile
-from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, UserSerializer
+from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, ProfileSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import random
@@ -10,11 +10,19 @@ from django.core.mail import send_mail
 
 
 
+
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [permissions.AllowAny]
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAdminUser]
+        return [permission() for permission in permission_classes]
+
+        
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
@@ -82,5 +90,12 @@ class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)        
+        serializer = ProfileSerializer(request.user)
+        return Response(serializer.data)
+        
+    def put(self, request):
+        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
