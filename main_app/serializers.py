@@ -13,13 +13,18 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', "is_active"]
         read_only_fields = ['username']
+        
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ["verification_code"]   
+        fields = ["user", "verification_code"]   
         
         
 class CartSerializer(serializers.ModelSerializer):
+    event_name = serializers.CharField(source="event.name", read_only=True)
+    event_date = serializers.DateTimeField(source="event.date", read_only=True)
+    price = serializers.DecimalField(source="event.price", max_digits=6, decimal_places=2, read_only=True)
+    
     class Meta:
         model = Cart
         fields = '__all__'
@@ -31,21 +36,19 @@ class EventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TicketSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)  
-    event = EventSerializer(read_only=True)
+    event_name = serializers.CharField(source='event.name', read_only=True)
+    event_price = serializers.DecimalField(source='event.price', max_digits=8, decimal_places=2, read_only=True)
+    seat_type = serializers.CharField(read_only=True)
 
     class Meta:
         model = Ticket
-        fields = '__all__'
+        fields = ['id', 'event_name', 'event_price', 'seat_type', 'qr_code', 'is_active']
 
 class TransferSerializer(serializers.ModelSerializer):
-    ticket = TicketSerializer(read_only=True)
-    seller = UserSerializer(read_only=True)
-    buyer = UserSerializer(read_only=True)
-
     class Meta:
         model = Transfer
         fields = '__all__'
+        read_only_fields = ['seller', 'price']
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(

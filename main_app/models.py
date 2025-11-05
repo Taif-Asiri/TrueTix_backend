@@ -8,9 +8,21 @@ class Event(models.Model):
     date = models.DateTimeField()
     location = models.CharField(max_length=150)
     description = models.TextField(blank=True)
-
+    
+    price_front = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    price_behind_goal = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    price_side_home = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    price_side_away = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    
     def __str__(self):
         return self.name
+    
+SEAT_CHOICES = [
+    ('Front', 'Front'),
+    ('Behind Goal', 'Behind Goal'),
+    ('Home Side', 'Home Side'),
+    ('Away Side', 'Away Side'),
+]  
 
 #Create 2nd model 
 class Ticket(models.Model):
@@ -18,6 +30,9 @@ class Ticket(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="tickets")
     qr_code = models.CharField(max_length=200, unique=True)
     is_active = models.BooleanField(default=True)
+    seat_type = models.CharField(max_length=20, choices=SEAT_CHOICES, default='Front')
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+
 
     def __str__(self):
         return f"{self.event.name} - {self.user.username}"
@@ -47,9 +62,14 @@ class Profile(models.Model):
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    seat_type = models.CharField(max_length=20, choices=SEAT_CHOICES, default='Front')
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     added_at = models.DateTimeField(auto_now_add=True)
-
+    
+    class Meta:
+        unique_together = ('user', 'event', 'seat_type') 
     def __str__(self):
         return f"{self.user.username} - {self.event.name}"
 
