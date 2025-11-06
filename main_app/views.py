@@ -96,7 +96,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 class VerifyEmailView(APIView):
-    permission_classes = [AllowAny]
+    
     def post(self, request):
         username = request.data.get("username")
         code = request.data.get("code")
@@ -205,10 +205,9 @@ def resell_ticket(request):
     print("📦 Received data:", request.data)
 
     try:
+        ticket = Ticket.objects.get(id=ticket_id, user=request.user)
         ticket_id = request.data.get("ticket")
         price = request.data.get("price")
-
-        ticket = Ticket.objects.get(id=ticket_id, user=request.user)
         # new_price = round(ticket.event.price * Decimal("1.2"))
         new_price = Decimal(str(price))
         
@@ -230,8 +229,12 @@ def resell_ticket(request):
 
     )
     # ticket.is_active = False
+    
+    ticket = Ticket.objects.get(id=ticket_id)
     ticket.is_resell = True
+    ticket.status = "resell"
     ticket.save()
+
 
 
     return Response({"message": "Ticket listed for resale successfully!", "price": new_price}, status=201)

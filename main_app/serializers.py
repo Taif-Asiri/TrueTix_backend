@@ -40,10 +40,10 @@ class TicketSerializer(serializers.ModelSerializer):
     event_price = serializers.SerializerMethodField()
     seat_type = serializers.CharField()
     qr_code = serializers.CharField(read_only=True)
-
+    event_image = serializers.ImageField(source='event.image')
     class Meta:
         model = Ticket
-        fields = ['id', 'event_name', 'event_price', 'seat_type', 'qr_code', 'is_active', 'is_resell']
+        fields = ['id', 'event_name', 'event_price', 'seat_type', 'qr_code', 'is_active', 'is_resell', 'event_image']
         
     def get_event_price(self, obj):
         seat = obj.seat_type
