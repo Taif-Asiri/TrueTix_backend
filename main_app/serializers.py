@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Event, Ticket, Transfer, Profile, Cart
+from .models import Event, Ticket, Transfer, Cart
 import random
 from django.core.mail import send_mail
 from rest_framework.validators import UniqueValidator
@@ -14,16 +14,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', "is_active"]
         read_only_fields = ['username']
         
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ["user", "verification_code"]   
-        
+    
         
 class CartSerializer(serializers.ModelSerializer):
     event_name = serializers.CharField(source="event.name", read_only=True)
     event_date = serializers.DateTimeField(source="event.date", read_only=True)
-    price = serializers.DecimalField(source="event.price", max_digits=6, decimal_places=2, read_only=True)
+
     
     class Meta:
         model = Cart
@@ -37,12 +33,27 @@ class EventSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     event_name = serializers.CharField(source='event.name', read_only=True)
-    event_price = serializers.DecimalField(source='event.price', max_digits=8, decimal_places=2, read_only=True)
-    seat_type = serializers.CharField(read_only=True)
+    event_price = serializers.SerializerMethodField()
+    seat_type = serializers.CharField()
+    qr_code = serializers.CharField(read_only=True)
 
     class Meta:
         model = Ticket
         fields = ['id', 'event_name', 'event_price', 'seat_type', 'qr_code', 'is_active']
+        
+    def get_event_price(self, obj):
+        seat = obj.seat_type
+        event = obj.event
+        if seat == 'Front':
+            return event.price_front
+        elif seat == 'Behind Goal':
+            return event.price_behind_goal
+        elif seat == 'Home Side':
+            return event.price_side_home
+        elif seat == 'Away Side':
+            return event.price_side_away
+        return None
+
 
 class TransferSerializer(serializers.ModelSerializer):
     class Meta:

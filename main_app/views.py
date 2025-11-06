@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, generics, status
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import Event, Ticket, Transfer, Profile, Cart
-from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, ProfileSerializer, CartSerializer
+from .models import Event, Ticket, Transfer, Cart
+from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, CartSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
@@ -22,13 +22,14 @@ class EventViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
 
-        # return [permission() for permission in permission_classes]
-
         
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Ticket.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -107,28 +108,18 @@ class VerifyEmailView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         
-class UserProfileView(APIView):
+
+class CartViewSet(viewsets.ModelViewSet):
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
+
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        serializer = ProfileSerializer(request.user)
-        return Response(serializer.data)
-        
-    def put(self, request):
-        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
 
-# class CartViewSet(APIView):
-#     permission_classes = [permissions.IsAuthenticated]
-
-#     def get_queryset(self):
-#         return Cart.objects.filter(user=self.request.user)
-
-#     def perform_create(self, serializer):
-#         serializer.save(user=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
         
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -141,7 +132,7 @@ def add_to_cart(request):
 
         seat_price_map = {
             "Front": event.price_front,
-            "Behind Goal": event.price_goal,
+            "Behind Goal": event.price_behind_goal,
             "Home Side": event.price_side_home,
             "Away Side": event.price_side_away,
         }
@@ -172,7 +163,7 @@ def get_cart(request):
 @permission_classes([IsAuthenticated])
 def checkout_cart(request):
     try:  
-        # user = request.user
+
         cart_items = Cart.objects.filter(user=request.user)
     
         if not cart_items.exists():

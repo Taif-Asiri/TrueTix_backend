@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+import datetime
 # create first model
 class Event(models.Model):
     name = models.CharField(max_length=100)
@@ -13,7 +14,7 @@ class Event(models.Model):
     price_behind_goal = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     price_side_home = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     price_side_away = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-    
+    background_url = models.URLField(blank=True, null=True)
     def __str__(self):
         return self.name
     
@@ -32,6 +33,8 @@ class Ticket(models.Model):
     is_active = models.BooleanField(default=True)
     seat_type = models.CharField(max_length=20, choices=SEAT_CHOICES, default='Front')
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    background_url = models.URLField(blank=True, null=True)
+
 
 
     def __str__(self):
@@ -50,15 +53,8 @@ class Transfer(models.Model):
         return f"Transfer of {self.ticket} by {self.seller}"
     
     
-#create 4th model 
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    verification_code = models.CharField(max_length=6, blank=True, null=True)
 
-    def __str__(self):
-        return self.user.username
-    
-# create 5th model
+# create 4th model
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
