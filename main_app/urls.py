@@ -17,8 +17,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
     path('verify/', VerifyEmailView.as_view(), name='verify'),
-    path("cart/add/", views.add_to_cart, name="add_to_cart"),
-    path("cart/checkout/", views.checkout_cart, name="checkout_cart"),
     path("resell/", views.resell_ticket, name="resell_ticket"),
 
 

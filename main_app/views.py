@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, generics, status
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import Event, Ticket, Transfer, Cart
+from .models import Event, Ticket, Transfer, Cart, Profile
 from .serializers import EventSerializer, TicketSerializer, TransferSerializer, RegisterSerializer, CartSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +9,8 @@ from rest_framework.decorators import api_view, permission_classes
 import random
 from django.core.mail import send_mail
 import uuid
+from decimal import Decimal
+
 
 
 
@@ -51,7 +53,7 @@ class TransferViewSet(viewsets.ModelViewSet):
 
 
         base_price = ticket.price
-        resale_price = round(base_price * 1.2, 2)
+        resale_price = round(base_price * Decimal("1.2"))
 
 
         serializer.save(
@@ -75,6 +77,7 @@ class RegisterView(generics.CreateAPIView):
         profile = Profile.objects.get(user=user)
         profile.verification_code = otp
         profile.save()
+        print("✅ OTP stored:", profile.verification_code)
         
         subject = "Your TrueTix Verification Code"
         message = f"Hello!\n\nYour verification code is: {otp}\n\nThank you for using TrueTix."
@@ -93,15 +96,20 @@ class RegisterView(generics.CreateAPIView):
 
 
 class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         username = request.data.get("username")
         code = request.data.get("code")
 
         try:
             user = User.objects.get(username=username)
-            if user.profile.verification_code == code:
+            profile = Profile.objects.get(user=user)
+
+            if str(profile.verification_code) == str(code):
                 user.is_active = True
                 user.save()
+                print("🧾 Submitted code:", code)
+                print("📦 Stored code:", profile.verification_code)
                 return Response({"message": "Account verified successfully!"}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": "Invalid verification code."}, status=status.HTTP_400_BAD_REQUEST)
@@ -128,7 +136,11 @@ def add_to_cart(request):
         event_id = request.data.get("event_id")
         seat_type = request.data.get("seat_type", "Front")
         event = Event.objects.get(id=event_id)
-        
+    
+        if not event.tickets.filter(is_active=True, is_resell=False).exists():
+            return Response({"error": "No available tickets for this event"}, status=400)
+
+    
 
         seat_price_map = {
             "Front": event.price_front,
@@ -140,7 +152,6 @@ def add_to_cart(request):
         price = seat_price_map.get(seat_type, event.price_front)
         
         if Cart.objects.filter(user=request.user, event=event, seat_type=seat_type).exists():
-            
             return Response({"message": "Event already in cart"}, status=400)
 
         Cart.objects.create(user=request.user, event=event, seat_type=seat_type, price=price)
@@ -191,20 +202,38 @@ def checkout_cart(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def resell_ticket(request):
+    print("📦 Received data:", request.data)
+
     try:
-        ticket_id = request.data.get("ticket_id")
+        ticket_id = request.data.get("ticket")
+        price = request.data.get("price")
+
         ticket = Ticket.objects.get(id=ticket_id, user=request.user)
-
-        new_price = round(ticket.event.price * 1.2, 2)
-
-        Transfer.objects.create(
-            ticket=ticket,
-            seller=request.user,
-            price=new_price,
-        )
-
-        return Response({"message": "Ticket listed for resale successfully!", "price": new_price}, status=201)
+        # new_price = round(ticket.event.price * Decimal("1.2"))
+        new_price = Decimal(str(price))
+        
     except Ticket.DoesNotExist:
-        return Response({"error": "Ticket not found or not owned by user"}, status=404)
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response({"error": "Ticket not found"}, status=404)
+
+    if not ticket.is_active:
+        return Response({"error": "Cannot resell inactive ticket"}, status=400)
+
+    if ticket.is_resell:
+        return Response({"error": "Ticket already listed for resale"}, status=400)
+
+    Transfer.objects.create(
+        ticket=ticket,
+        seller=request.user,
+        price=new_price,
+        is_completed=False,
+
+
+    )
+    # ticket.is_active = False
+    ticket.is_resell = True
+    ticket.save()
+
+
+    return Response({"message": "Ticket listed for resale successfully!", "price": new_price}, status=201)
+
+

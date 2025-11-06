@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Event, Ticket, Transfer, Cart
+from .models import Event, Ticket, Transfer, Cart, Profile
 import random
 from django.core.mail import send_mail
 from rest_framework.validators import UniqueValidator
@@ -14,7 +14,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', "is_active"]
         read_only_fields = ['username']
         
-    
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ["verification_code"]   
+        fields = ["user", "verification_code"]       
         
 class CartSerializer(serializers.ModelSerializer):
     event_name = serializers.CharField(source="event.name", read_only=True)
@@ -39,7 +43,7 @@ class TicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ['id', 'event_name', 'event_price', 'seat_type', 'qr_code', 'is_active']
+        fields = ['id', 'event_name', 'event_price', 'seat_type', 'qr_code', 'is_active', 'is_resell']
         
     def get_event_price(self, obj):
         seat = obj.seat_type
@@ -60,6 +64,7 @@ class TransferSerializer(serializers.ModelSerializer):
         model = Transfer
         fields = '__all__'
         read_only_fields = ['seller', 'price']
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(

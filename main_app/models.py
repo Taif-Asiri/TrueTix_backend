@@ -34,6 +34,7 @@ class Ticket(models.Model):
     seat_type = models.CharField(max_length=20, choices=SEAT_CHOICES, default='Front')
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     background_url = models.URLField(blank=True, null=True)
+    is_resell = models.BooleanField(default=False)
 
 
 
@@ -68,4 +69,11 @@ class Cart(models.Model):
         unique_together = ('user', 'event', 'seat_type') 
     def __str__(self):
         return f"{self.user.username} - {self.event.name}"
+    
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    verification_code = models.CharField(max_length=6, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
 
